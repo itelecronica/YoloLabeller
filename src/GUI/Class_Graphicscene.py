@@ -73,8 +73,9 @@ class GraphicsScene(QGraphicsScene):
         
         
     def setShowLabels(self, state):
-        self.showLabels = state 
-        self.renderScene()
+        self.showLabels = state
+        try: self.renderScene()
+        except: pass
         
         
     def setSelectionMode(self, selectionMode): #0 modo libre, 1 modo prefijado
