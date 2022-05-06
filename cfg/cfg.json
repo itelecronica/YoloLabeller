@@ -1,0 +1,19 @@
+{
+    "classes":["acumulacion_pellets", "icebergs", "otros", "polvo_pellet", "pellets"],
+    "croppedImage":{
+        "enabled":0,
+        "roi":[0, 0, 1919, 1079]
+    },
+    "inputDir":"../input/",
+    "outputDir":"../output/",
+    "fixed_dims":{
+        "ROI":[49, 49],
+        "randomSize_percent":0.10000000
+    },
+    "savedParameters":{
+        "outputFormat":"YoloTXT",
+        "savePoint":0,
+        "selectionMode":1
+    },
+    "showLabels":1
+}
