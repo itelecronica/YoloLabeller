@@ -7,13 +7,13 @@
     "inputDir":"../input/",
     "outputDir":"../output/",
     "fixed_dims":{
-        "ROI":[49, 49],
+        "ROI":[22, 22],
         "randomSize_percent":0.10000000
     },
     "savedParameters":{
         "outputFormat":"YoloTXT",
         "savePoint":0,
-        "selectionMode":1
+        "selectionMode":0
     },
     "showLabels":1
 }

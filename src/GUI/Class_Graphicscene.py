@@ -40,7 +40,8 @@ class GraphicsScene(QGraphicsScene):
         
     def clearRois(self):
         self.rois = []
-        self.renderScene()
+        try: self.renderScene()
+        except: pass 
         
         
     def getImage(self):

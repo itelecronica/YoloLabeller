@@ -315,9 +315,11 @@ class MainGUIManager(QMainWindow):
     
     
     def saveChanges(self):
-        image = self.mainScene.getImage()
-        rois = self.mainScene.getRois()
-        self.mainController.exportFiles(self.outputImagePath, self.outputRoisPath, image, rois)
+        try:
+            image = self.mainScene.getImage()
+            rois = self.mainScene.getRois()
+            self.mainController.exportFiles(self.outputImagePath, self.outputRoisPath, image, rois)
+        except: return
     
     
     def closeEvent (self, event):
