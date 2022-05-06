@@ -25,15 +25,10 @@ from GUI.Class_MainGUIManager import MainGUIManager
 from LOGIC.Class_MainController import MainController
 
 
-
-
-
 class MainApplication(QApplication):
-    
     
     appDir = os.path.dirname(os.path.abspath(__file__)) + "/"
     configGeneralPath = appDir + "../cfg/cfg.json"
-    
     
     
     def __init__(self,sys_argv):
@@ -48,16 +43,13 @@ class MainApplication(QApplication):
         self.mainController.initController()
         self.initSignals()
 
-
         
     def getConfigFiles(self):
         self.configGeneral = self.jsonManager.getJsonFile(self.configGeneralPath)
         
         
-        
     def initSignals(self):
         self.mainGUIManager.exportConfigGeneralFile.connect(self.onConfigGeneralChange)
-        
         
         
     def onConfigGeneralChange(self, configGeneral):
@@ -73,6 +65,3 @@ if __name__ == '__main__':
     bootManager = BootManager(logger)
     app = MainApplication(sys.argv)
     sys.exit(app.exec_())
-    app.processEvents()
-
-
