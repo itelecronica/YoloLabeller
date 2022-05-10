@@ -12,7 +12,7 @@
     },
     "savedParameters":{
         "outputFormat":"YoloTXT",
-        "savePoint":-1,
+        "savePoint":0,
         "selectionMode":1
     },
     "showLabels":0
