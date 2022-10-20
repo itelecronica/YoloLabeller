@@ -177,7 +177,7 @@ class MainGUIManager(QMainWindow):
         except:
             self.indexOfList = 0
             self.selectedImagePath = self.imageList[self.indexOfList]
-        self.ui.label_selectedImage.setText("Image: " + str(self.indexOfList + 1) + " of " + str(len(self.imageList)))
+        #self.ui.label_selectedImage.setText("Image: " + str(self.indexOfList + 1) + " of " + str(len(self.imageList)))
         
         image = cv2.imread(self.selectedImagePath)
         imageName = self.selectedImagePath.split("/")
@@ -186,7 +186,8 @@ class MainGUIManager(QMainWindow):
         extension = "." + extension[len(extension) - 1]
         self.outputImagePath = (self.appDir + self.configGeneral["outputDir"] + imageName).replace(extension, ".png")
         self.outputRoisPath = self.outputImagePath.replace(".png", ".txt")
-        
+        self.ui.label_selectedImage.setText(f"Image: {self.indexOfList + 1} of {len(self.imageList)}:    {imageName}")
+
         rois = self.mainController.importRois_YoloTXT(image, self.outputRoisPath)
         self.mainScene.setSelectedImage(image, rois)
         return
