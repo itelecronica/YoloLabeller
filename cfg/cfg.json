@@ -1,5 +1,5 @@
 {
-    "classes":["acumulacion_pellets", "icebergs", "otros", "polvo_pellet", "pellets"],
+    "classes":["via"],
     "croppedImage":{
         "enabled":0,
         "roi":[0, 0, 1919, 1079]
@@ -13,7 +13,7 @@
     "savedParameters":{
         "outputFormat":"YoloTXT",
         "savePoint":0,
-        "selectionMode":1
+        "selectionMode":0
     },
     "showLabels":0
 }

@@ -137,7 +137,7 @@ class KBD(QThread):
                 self.kbdEnabled = True 
             else:
                 self.kbdEnabled = False 
-            time.sleep(10)
+            time.sleep(0.1)
                 
             
         

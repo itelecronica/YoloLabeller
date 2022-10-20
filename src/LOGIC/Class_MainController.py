@@ -90,7 +90,7 @@ class MainController(QObject):
         notation = ""
         height, width, _ = image.shape
         i = 0
-        for roi in rois:
+        for roi in rois: #roi => xmin, ymin, xmax, ymax, class
             nclase = classList.index(roi[4])
             dw = 1.0 / width
             dh = 1.0 / height 

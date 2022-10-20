@@ -6,3 +6,6 @@ output
 src_dataset_modify
 BACKUP
 old_input
+**.py~
+**.sh~
+src/test.py
