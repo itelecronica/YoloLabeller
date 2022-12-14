@@ -1,0 +1,19 @@
+{
+    "classes":["pellet", "acumulacion1", "acumulacion2"],
+    "croppedImage":{
+        "enabled":0,
+        "roi":[0, 0, 1919, 1079]
+    },
+    "inputDir":"../input/",
+    "outputDir":"../output/",
+    "fixed_dims":{
+        "ROI":[10, 10],
+        "randomSize_percent":0.10000000
+    },
+    "savedParameters":{
+        "outputFormat":"YoloTXT",
+        "savePoint":4,
+        "selectionMode":0
+    },
+    "showLabels":0
+}
