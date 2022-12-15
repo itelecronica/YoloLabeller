@@ -8,6 +8,8 @@ Created on 26 abr. 2021
 from PyQt5.QtCore import pyqtSignal, QObject
 import os 
 import cv2
+import numpy as np
+import traceback
 
 
 class MainController(QObject):
@@ -84,7 +86,42 @@ class MainController(QObject):
         except: roisToImport = []
         return roisToImport
     
-    
+    def importRois_YoloTXTSegmentation(self, image, roisPath):
+        print(roisPath)
+        roisToImport = []
+        try:
+            f = open(roisPath, 'r')
+            rois = f.readlines()
+            f.close()
+            dh, dw, _ = image.shape
+            print (dh,dw)
+            for roi in rois:
+                nClase = int(roi[0])
+                coords = roi[1:].split()
+                coordenadas = []
+                '''for i in range(0,len(coords),2):
+                    print(i)
+                    coordenadas.append(float(coords[i])*dw)
+                    coordenadas.append(float(coords[i+1])*dh)'''
+                for i in range(0,len(coords)):
+                    if i%2==0:
+                        print (coords[i], float(coords[i])*dw)
+                        coordenadas.append(float(coords[i])*dw)
+                    else:
+                        coordenadas.append(float(coords[i])*dh)
+                
+                polygon = np.array([[x,y] for x, y in zip(coordenadas[0::2], coordenadas[1::2])], dtype ='int32') # convert list of coordinates to numpy massive 
+                #print (polygon)
+                '''polygon[:,0] = polygon[:,0]*dw
+                polygon[:,1] = polygon[:,1]*dh
+                polygon = polygon.astype(np.int32)'''
+                roisToImport.append([nClase,polygon])
+        except Exception as e: 
+            print(e)
+            print(traceback.format_exc())
+            roisToImport = []
+        return roisToImport
+
     def generateYoloTxt(self, image, rois):
         classList = self.configGeneral["classes"]
         notation = ""

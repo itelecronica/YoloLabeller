@@ -120,7 +120,7 @@
         <property name="currentIndex">
          <number>1</number>
         </property>
-        <widget class="QWidget" name="PageDetection" native="true">
+        <widget class="QWidget" name="PageDetection">
          <attribute name="title">
           <string>Deteccion Obj</string>
          </attribute>
@@ -357,7 +357,7 @@
           </item>
          </layout>
         </widget>
-        <widget class="QWidget" name="tab">
+        <widget class="QWidget" name="tab_Segmentation">
          <attribute name="title">
           <string>Segmentacion</string>
          </attribute>
@@ -498,7 +498,7 @@
               </widget>
              </item>
              <item row="1" column="3">
-              <widget class="QLineEdit" name="lineEdit_2"/>
+              <widget class="QLineEdit" name="lineEdit_Class2"/>
              </item>
              <item row="2" column="1">
               <widget class="QLabel" name="label_Class3">

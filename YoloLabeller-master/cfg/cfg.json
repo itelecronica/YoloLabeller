@@ -6,13 +6,14 @@
     },
     "inputDir":"../input/",
     "outputDir":"../output/",
+    "outputDir_Segmentation":"../labels/",
     "fixed_dims":{
         "ROI":[10, 10],
         "randomSize_percent":0.10000000
     },
     "savedParameters":{
         "outputFormat":"YoloTXT",
-        "savePoint":4,
+        "savePoint":0,
         "selectionMode":0
     },
     "showLabels":0

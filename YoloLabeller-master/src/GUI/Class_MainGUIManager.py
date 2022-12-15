@@ -22,7 +22,7 @@ class MainGUIManager(QMainWindow):
     imageBorder = 20
     exportConfigGeneralFile = pyqtSignal(object)
     indexOfList = 0
-    
+    modeApp = "detection"
 
     def __init__(self, MainWindow, configGeneral, configGeneralPath, mainController, appDir):
         QMainWindow.__init__(self)
@@ -46,6 +46,9 @@ class MainGUIManager(QMainWindow):
         self.loadLogo()
         for cls in self.configGeneral["classes"]:
             self.ui.listWidget_classes.addItem(cls)
+            self.ui.listWidget_clasesSegmentation.addItem(cls)
+            self.ui.comboBox_Class.addItem(cls)
+        self.ui.tabWidget.setCurrentIndex(0)
         self.loadMask(self.widthFixedPellets, self.heightFixedPellets)
         self.checkSelectionMode(0)
         self.kbd.start()
@@ -133,8 +136,18 @@ class MainGUIManager(QMainWindow):
         self.kbd.changeSelectionMode.connect(self.checkSelectionMode)
         self.kbd.scapeSignal.connect(self.onCloseProgram)
         self.kbd.undoneSignal.connect(self.mainScene.undoneChanges)
+        self.ui.tabWidget.currentChanged.connect(self.onModeChange)
+        self.ui.checkBox_onlyOneClass.clicked.connect(self.OnshowOnly1Class)
+        self.ui.comboBox_Class.currentIndexChanged.connect(self.getLabelOneClass)
         return
     
+    def onModeChange(self):
+        modes = ["detection","segmentation"]
+        self.modeApp = modes[self.ui.tabWidget.currentIndex()]
+        if self.modeApp == "detection":
+            self.ui.checkBox_onlyOneClass.setChecked(False)
+        self.setSelectedImage()
+        
     
     def onNewImageList(self, imageList):
         self.imageList = imageList
@@ -168,6 +181,9 @@ class MainGUIManager(QMainWindow):
             self.indexOfList = len(self.imageList) - 1
         else:
             self.indexOfList += sum
+        self.ui.checkBox_onlyOneClass.setChecked(False)
+        self.ui.comboBox_Class.setEnabled(False)
+        self.ui.comboBox_Class.setCurrentIndex(0)
         self.setSelectedImage()
         
         
@@ -185,15 +201,63 @@ class MainGUIManager(QMainWindow):
         imageName = imageName[len(imageName) - 1]
         extension = imageName.split(".")
         extension = "." + extension[len(extension) - 1]
-        self.outputImagePath = (self.appDir + self.configGeneral["outputDir"] + imageName).replace(extension, ".png")
-        self.outputRoisPath = self.outputImagePath.replace(".png", ".txt")
+        if self.modeApp == "detection":
+            self.outputImagePath = (self.appDir + self.configGeneral["outputDir"] + imageName).replace(extension, ".png")
+            self.outputRoisPath = self.outputImagePath.replace(".png", ".txt")
+            rois = self.mainController.importRois_YoloTXT(image, self.outputRoisPath)
+        else:
+            self.outputImagePath = (self.appDir + self.configGeneral["outputDir_Segmentation"] + imageName).replace(extension, ".png")
+            self.outputRoisPath = self.outputImagePath.replace(".png", ".txt")
+            roisTxt = self.mainController.importRois_YoloTXTSegmentation(image, self.outputRoisPath)
+            rois = []
+            if self.ui.checkBox_onlyOneClass.isChecked():
+                for roi in roisTxt:
+                    if roi[0]== self.labelOneClass:
+                        rois.append(roi)
+            else: rois = roisTxt
+            self.showCountSegmentation(rois)
         self.ui.label_selectedImage.setText(f"Image: {self.indexOfList + 1} of {len(self.imageList)}:    {imageName}")
+        
+        self.mainScene.setSelectedImage(image, rois, self.modeApp)
+        return
 
-        rois = self.mainController.importRois_YoloTXT(image, self.outputRoisPath)
-        self.mainScene.setSelectedImage(image, rois)
+    def OnshowOnly1Class(self):
+        if self.ui.checkBox_onlyOneClass.isChecked():
+            self.ui.comboBox_Class.setEnabled(True)
+        else:
+            self.ui.comboBox_Class.setEnabled(False)
+            self.ui.comboBox_Class.setCurrentIndex(0)
+            self.setSelectedImage()
+        return
+
+    def getLabelOneClass(self): 
+        if self.ui.checkBox_onlyOneClass.isChecked():
+            clase = str(self.ui.comboBox_Class.currentText())
+            if clase in self.configGeneral["classes"]:
+                self.labelOneClass = self.configGeneral["classes"].index(clase)
+                self.setSelectedImage()
+            else:
+                _ = QMessageBox.question(None, 'ERROR', "Es necesario seleccionar una clase a mostrar", buttons = QMessageBox.Ok)
+        else: pass
         return
         
-        
+    def showCountSegmentation(self, rois):
+
+        count_classes = [0]*len(self.configGeneral["classes"])
+        if len(rois)!=0:
+            for roi in rois:
+                count_classes[roi[0]]+=1
+        else:
+            pass
+        labels = [self.ui.label_Class1, self.ui.label_Class2, self.ui.label_Class3]
+        contadores = [self.ui.lineEdit_Class1,self.ui.lineEdit_Class2,self.ui.lineEdit_Class3]
+        for i in range(len(labels)):
+            labels[i].setText(self.configGeneral["classes"][i])
+            contadores[i].clear()
+            contadores[i].setText(str(count_classes[i]))
+
+        return
+
     def addNewClass(self):
         newClass = str(self.ui.textEdit_newClass.toPlainText())
         err = ""

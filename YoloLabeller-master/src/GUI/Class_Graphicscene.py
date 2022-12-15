@@ -12,6 +12,7 @@ from PyQt5.QtGui import QImage, QPixmap, QCursor
 import cv2
 from scipy.spatial import Delaunay
 from random import randint
+import numpy as np
 
 
 #Clase hija de la ventana grafica QGraphicsScene
@@ -22,7 +23,7 @@ class GraphicsScene(QGraphicsScene):
     roiColor, selectionColor = (255,0,0), (0,255,0)
     mouseEnabled, isClassSelected, showLabels = False, False, False
     selectedRoi, selectedClass, lastChange, rois = None, None, None, []
-    
+    mode = "detection"
     
     def __init__ (self, parent, configGeneral):
         super(GraphicsScene, self).__init__ (parent)
@@ -36,6 +37,8 @@ class GraphicsScene(QGraphicsScene):
         randomSize = self.configGeneral["fixed_dims"]["randomSize_percent"]
         self.setFixedDims(fixedDims, randomSize)
         self.showLabels = self.configGeneral["showLabels"]
+        self.oneLabel = False
+        self.label = 0
         
         
     def clearRois(self):
@@ -62,10 +65,12 @@ class GraphicsScene(QGraphicsScene):
         self.renderScene()
         
         
-    def setSelectedImage(self, selectedImage, rois):
+    def setSelectedImage(self, selectedImage, rois, modeApp):
         self.image = selectedImage
         self.rois = rois
         self.mouseEnabled = True
+        print(modeApp)
+        self.mode = modeApp
         self.renderScene()
         
         
@@ -77,7 +82,6 @@ class GraphicsScene(QGraphicsScene):
         self.showLabels = state
         try: self.renderScene()
         except: pass
-        
         
     def setSelectionMode(self, selectionMode): #0 modo libre, 1 modo prefijado
         self.selectionMode = selectionMode
@@ -231,22 +235,41 @@ class GraphicsScene(QGraphicsScene):
     def renderScene(self):
         image = self.image.copy()
         h, w, _ = image.shape
-        i = 0
-        for roi in self.rois:
-            if roi == []: continue
-            color = self.roiColor
-            if i == self.selectedRoi:
-                color = self.selectionColor
-            try:
-                cv2.rectangle(image, (roi[0], roi[1]), (roi[2], roi[3]), color, 1, 4)
-            except:
-                self.rois.pop(len(self.rois)-1)
-                continue
-            if self.showLabels:
-                pxmin, pymin, pxmax, pymax, dy = self.getLabelCoords(roi, w, h)
-                cv2.rectangle(image, (pxmin, pymin), (pxmax, pymax), color, cv2.FILLED)
-                cv2.putText(image, self.rois[i][4], (pxmin + 10, pymin + dy), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255,255,255))
-            i += 1
+        if self.mode == "detection":
+            i = 0
+            for roi in self.rois:
+                if roi == []: continue
+                color = self.roiColor
+                if i == self.selectedRoi:
+                    color = self.selectionColor
+                try:
+                    cv2.rectangle(image, (roi[0], roi[1]), (roi[2], roi[3]), color, 1, 4)
+                except:
+                    self.rois.pop(len(self.rois)-1)
+                    continue
+                if self.showLabels:
+                    pxmin, pymin, pxmax, pymax, dy = self.getLabelCoords(roi, w, h)
+                    cv2.rectangle(image, (pxmin, pymin), (pxmax, pymax), color, cv2.FILLED)
+                    cv2.putText(image, self.rois[i][4], (pxmin + 10, pymin + dy), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255,255,255))
+                i += 1
+        else:
+            print ("hola")
+            for roi in self.rois:
+                
+                colorPalette = [(255,0,0),(0,255,0),(0,0,255)]
+                nClase = roi[0]
+                color = colorPalette[nClase]
+                try:
+                    contour = np.array([[x, y] for x, y in zip(roi[1][0::2], roi[1][1::2])],dtype='int32')
+                    #image = cv2.polylines(image,[roi[1]],True,color,2)
+                    #print(roi[1])
+                    image = cv2.fillPoly(image, [roi[1]], color)
+                    x,y,wc,hc = cv2.boundingRect(roi[1])
+                    image = cv2.rectangle(image,(x,y),(x+wc,y+hc),color,1)
+                except Exception as e:
+                    print(e)
+                    continue
+
         self.showImage(image)
         
         
