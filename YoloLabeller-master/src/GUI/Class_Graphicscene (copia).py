@@ -179,14 +179,29 @@ class GraphicsScene(QGraphicsScene):
                     self.newRoi = None
                     if self.rois[len(self.rois) - 1] == []: self.rois.pop(len(self.rois) - 1)
 
-    def wheelEvent(self, event):
+    '''def wheelEvent(self, event):
         moose = event.delta()/120
         if moose > 0:
             #mainConfigurator.zoomIn()
             self.zoomEvent.emit(1)
         elif moose < 0:
             #mainConfigurator.zoomOut()
-            self.zoomEvent.emit(-1)
+            self.zoomEvent.emit(-1)'''
+
+    def wheelEvent(self, event):
+        #if self.hasPhoto():
+        if event.delta() > 0:
+            factor = 1.25
+            self._zoom += 1
+        else:
+            factor = 0.8
+            self._zoom -= 1
+        if self._zoom > 0:
+            #self.scale(factor, factor)
+        elif self._zoom == 0:
+            self.fitInView()
+        else:
+            self._zoom = 0
         
     def in_hull(self, p, hull):
         try:
@@ -197,7 +212,7 @@ class GraphicsScene(QGraphicsScene):
             return 0
 
 
-    '''def fitInView(self, scale=True):
+    def fitInView(self, scale=True):
         rect = QtCore.QRectF(self._photo.pixmap().rect())
         if not rect.isNull():
             self.setSceneRect(rect)
@@ -209,7 +224,7 @@ class GraphicsScene(QGraphicsScene):
             factor = min(viewrect.width() / scenerect.width(),
                             viewrect.height() / scenerect.height())
             #self.scale(factor, factor)
-            self._zoom = 0'''
+            self._zoom = 0
     
     def checkIfRoiSelected(self):
         i = 0

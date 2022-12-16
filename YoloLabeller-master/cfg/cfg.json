@@ -8,7 +8,7 @@
     "outputDir":"../output/",
     "outputDir_Segmentation":"../labels/",
     "fixed_dims":{
-        "ROI":[10, 10],
+        "ROI":[33, 33],
         "randomSize_percent":0.10000000
     },
     "savedParameters":{

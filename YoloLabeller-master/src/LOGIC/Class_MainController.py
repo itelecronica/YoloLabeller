@@ -87,14 +87,13 @@ class MainController(QObject):
         return roisToImport
     
     def importRois_YoloTXTSegmentation(self, image, roisPath):
-        print(roisPath)
         roisToImport = []
         try:
             f = open(roisPath, 'r')
             rois = f.readlines()
             f.close()
             dh, dw, _ = image.shape
-            print (dh,dw)
+            #print (dh,dw)
             for roi in rois:
                 nClase = int(roi[0])
                 coords = roi[1:].split()
@@ -105,7 +104,6 @@ class MainController(QObject):
                     coordenadas.append(float(coords[i+1])*dh)'''
                 for i in range(0,len(coords)):
                     if i%2==0:
-                        print (coords[i], float(coords[i])*dw)
                         coordenadas.append(float(coords[i])*dw)
                     else:
                         coordenadas.append(float(coords[i])*dh)

@@ -8,7 +8,7 @@ Created on 26 abr. 2021
 
 from PyQt5.QtCore import QTimer, pyqtSignal, Qt
 from PyQt5.QtWidgets import QMainWindow, QGraphicsScene, QMessageBox
-from PyQt5.QtGui import QImage, QPixmap
+from PyQt5.QtGui import QImage, QPixmap, QTransform
 import cv2, os, time#, threading
 import numpy as np
 
@@ -23,6 +23,7 @@ class MainGUIManager(QMainWindow):
     exportConfigGeneralFile = pyqtSignal(object)
     indexOfList = 0
     modeApp = "detection"
+    zoom = 1
 
     def __init__(self, MainWindow, configGeneral, configGeneralPath, mainController, appDir):
         QMainWindow.__init__(self)
@@ -101,6 +102,7 @@ class MainGUIManager(QMainWindow):
         self.ui.horizontalSlider_size_pellets.setSingleStep(5)
         self.ui.horizontalSlider_size_pellets.setValue(self.widthFixedPellets)
         self.onFixedSizeChanged()
+        self.mainScene.zoomEvent.connect(self.zoomAux)
         return
     
     
@@ -392,7 +394,30 @@ class MainGUIManager(QMainWindow):
         self.onCloseProgram()
         event.ignore()
         return
-    
+
+    def zoomAux(self, type):
+        if type == -1:
+            self.zoomOut()
+        else:
+            self.zoomIn()
+
+    def zoomIn(self):
+        self.zoom *= 1.05
+        self.updateView()
+        
+    def zoomOut(self):
+        self.zoom /= 1.05
+        self.updateView()
+
+    def updateView(self):
+
+        self.ui.graphicsView_visualizer.setTransform(QTransform().scale(self.zoom, self.zoom))
+        self.ui.graphicsView_visualizer.setScene(self.mainScene)
+        self.mainScene.update()        
+
+    def resetZoom (self):
+        self.zoom=1
+        self.updateView()
     
     def onCloseProgram(self):
         msg = "Crear punto de guardado?"
