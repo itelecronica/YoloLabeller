@@ -219,7 +219,7 @@ class MainGUIManager(QMainWindow):
             else: rois = roisTxt
             self.showCountSegmentation(rois)
         self.ui.label_selectedImage.setText(f"Image: {self.indexOfList + 1} of {len(self.imageList)}:    {imageName}")
-        
+        self.resetZoom()
         self.mainScene.setSelectedImage(image, rois, self.modeApp)
         return
 

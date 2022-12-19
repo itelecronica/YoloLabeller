@@ -8,14 +8,13 @@ Created on 14 jun. 2021
 
 from PyQt5 import QtCore
 from PyQt5.QtWidgets import QGraphicsScene, QAction, QMenu
-from PyQt5.QtGui import QImage, QPixmap, QCursor
+from PyQt5.QtGui import QImage, QPixmap, QCursor, QPainter
 from PyQt5.QtCore import pyqtSignal
 import cv2
 from scipy.spatial import Delaunay
 from random import randint
 import numpy as np
-#from GUI.MainZoom import Window
-#from GUI.MainZoom import PhotoViewer
+
 
 #Clase hija de la ventana grafica QGraphicsScene
 class GraphicsScene(QGraphicsScene):
@@ -27,6 +26,7 @@ class GraphicsScene(QGraphicsScene):
     selectedRoi, selectedClass, lastChange, rois = None, None, None, []
     mode = "detection"
     zoomEvent = pyqtSignal(int)
+    polygon_labelling = 0
     
     def __init__ (self, parent, configGeneral):
         super(GraphicsScene, self).__init__ (parent)
@@ -136,41 +136,75 @@ class GraphicsScene(QGraphicsScene):
             
             
     def mousePressEvent(self, event):
-        self.newRoi = None
-        self.selectedRoi = None
-        if self.mouseEnabled:
-            self._mouse_button = event.buttons()
-            self.posicionInicial = QtCore.QPointF(event.scenePos())
-            self.posicionInicialX = int(self.posicionInicial.x())
-            self.posicionInicialY = int(self.posicionInicial.y())
-            if (self._mouse_button == QtCore.Qt.LeftButton) and self.isClassSelected:
-                if self.selectionMode == 1:
-                    self.rois.append(self.setCoordinatesForFixedRoi(self.posicionInicialX, self.posicionInicialY))
-                    self.lastChange = len(self.rois) - 1
-                else:
-                    self.newRoi = True
-                    self.rois.append([])
-            if (self._mouse_button == QtCore.Qt.RightButton):
-                self.checkIfRoiSelected()
-                if self.selectedRoi is not None:
-                    self.menu.popup(QCursor.pos())
-            self.renderScene()
-            
-            
+        if self.mode == "detection":
+            self.newRoi = None
+            self.selectedRoi = None
+            if self.mouseEnabled:
+                self._mouse_button = event.buttons()
+                self.posicionInicial = QtCore.QPointF(event.scenePos())
+                self.posicionInicialX = int(self.posicionInicial.x())
+                self.posicionInicialY = int(self.posicionInicial.y())
+                if (self._mouse_button == QtCore.Qt.LeftButton) and self.isClassSelected:
+                    if self.selectionMode == 1:
+                        self.rois.append(self.setCoordinatesForFixedRoi(self.posicionInicialX, self.posicionInicialY))
+                        self.lastChange = len(self.rois) - 1
+                    else:
+                        self.newRoi = True
+                        self.rois.append([])
+                if (self._mouse_button == QtCore.Qt.RightButton):
+                    self.checkIfRoiSelected()
+                    if self.selectedRoi is not None:
+                        self.menu.popup(QCursor.pos())
+                #self.renderScene()
+        else:
+            if self.mouseEnabled:
+                self._mouse_button = event.buttons()
+                initial_pos = QtCore.QPointF(event.scenePos())
+                initial_pos_x = int(initial_pos.x())
+                initial_pos_y = int(initial_pos.y())
+                if (self._mouse_button == QtCore.Qt.LeftButton):
+                    if not self.polygon_labelling:
+                        
+                        self.rois.append([0])
+                        self.index = len(self.rois) -1
+                        print(self.index)
+                        #self.rois[self.index].append([[initial_pos_x, initial_pos_y]])
+                        self.rois[self.index].append(np.array([initial_pos_x, initial_pos_y], dtype = 'int32'))
+                        self.polygon_labelling = True
+                    else:
+                        #self.rois[self.index][1].append([initial_pos_x, initial_pos_y])
+                        np.append(self.rois[self.index][1],[initial_pos_x, initial_pos_y])
+                        self.renderScene()
+        return
+
     def mouseMoveEvent(self, event):
-        if self.isClassSelected and self.mouseEnabled:
+        if self.mode == "detection":
+            if self.isClassSelected and self.mouseEnabled:
+                self._mouse_button = event.buttons()
+                if (self._mouse_button == QtCore.Qt.LeftButton):
+                    self.posicionFinal = QtCore.QPointF(event.scenePos())
+                    self.posicionFinalX = int(self.posicionFinal.x())
+                    self.posicionFinalY = int(self.posicionFinal.y())
+                    if self.newRoi:
+                        roiIndex = len(self.rois) - 1
+                        self.rois[roiIndex] = [self.posicionInicialX, self.posicionInicialY, self.posicionFinalX, self.posicionFinalY, self.selectedClass]
+                        self.rois[roiIndex] = self.sortRoiValues(self.rois[roiIndex])
+                        self.lastChange = roiIndex
+                        self.renderScene()
+        else:
             self._mouse_button = event.buttons()
             if (self._mouse_button == QtCore.Qt.LeftButton):
-                self.posicionFinal = QtCore.QPointF(event.scenePos())
-                self.posicionFinalX = int(self.posicionFinal.x())
-                self.posicionFinalY = int(self.posicionFinal.y())
-                if self.newRoi:
-                    roiIndex = len(self.rois) - 1
-                    self.rois[roiIndex] = [self.posicionInicialX, self.posicionInicialY, self.posicionFinalX, self.posicionFinalY, self.selectedClass]
-                    self.rois[roiIndex] = self.sortRoiValues(self.rois[roiIndex])
-                    self.lastChange = roiIndex
+                if self.polygon_labelling:
+                    final_pos = QtCore.QPointF(event.scenePos())
+                    final_pos_x = int(final_pos.x())
+                    final_pos_y = int(final_pos.y())
+                    np.append(self.rois[self.index][1],[final_pos_x, final_pos_y])
+                    print([final_pos_x, final_pos_y])
+                    #self.rois[self.index][1].append([final_pos_x, final_pos_y])
                     self.renderScene()
-                    
+                    self.pollygon_labelling = False
+
+
             
     def mouseReleaseEvent(self, event):
         if self.isClassSelected and self.mouseEnabled:
@@ -281,13 +315,20 @@ class GraphicsScene(QGraphicsScene):
                 i += 1
         else:
             #print ("hola")
+            indice = 0
             for roi in self.rois:
                 
+                if indice == len(self.rois)-1:
+                    print (roi)
                 colorPalette = [(255,0,0),(0,255,0),(0,0,255)]
                 nClase = roi[0]
+                #print (nClase)
                 color = colorPalette[nClase]
+                indice += 1
                 try:
-                    contour = np.array([[x, y] for x, y in zip(roi[1][0::2], roi[1][1::2])],dtype='int32')
+                    '''if roi[1].type() != "int32":
+                        print ("hola")
+                        roi[1] = np.array([[x, y] for x, y in zip(roi[1][0::2], roi[1][1::2])],dtype='int32')'''
                     #image = cv2.polylines(image,[roi[1]],True,color,2)
                     #print(roi[1])
                     image = cv2.fillPoly(image, [roi[1]], color)
