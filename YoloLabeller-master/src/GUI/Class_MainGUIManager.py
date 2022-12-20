@@ -14,8 +14,8 @@ import numpy as np
 
 from GUI.Class_Graphicscene import GraphicsScene
 from UTIL.Class_KBD import KBD
-from GUI.Class_Painter import PainterMask
-
+#from GUI.Class_Painter import PainterMask
+from LOGIC.Class_Conversor import ConversorMasks
 
 class MainGUIManager(QMainWindow):
 
@@ -35,6 +35,7 @@ class MainGUIManager(QMainWindow):
         self.appDir = appDir
         self.logoPath = self.appDir + "../cfg/source/logo.jpg"
         self.kbd = KBD()
+        self.conversorMask = ConversorMasks()
         self.initGUIVariables()
         self.initGUISignals()
         self.loadGUITimer = QTimer()
@@ -58,7 +59,7 @@ class MainGUIManager(QMainWindow):
     def initGUIVariables(self):
         #Inicializando la lista de ventanas graficas
         self.outputRoisPath = None
-        
+        self.maskPath = None
         #Formato de etiquetas
         self.outputCheckBoxList = [self.ui.checkBox_FormatYolotxt, self.ui.checkBox_FormatYoloxml]
         for outputFormat in self.outputCheckBoxList:
@@ -79,7 +80,7 @@ class MainGUIManager(QMainWindow):
         self.ui.graphicsView_visualizer.setFocusPolicy(Qt.NoFocus)
         self.mainScene = GraphicsScene(self.ui.graphicsView_visualizer, self.configGeneral)
         self.ui.graphicsView_visualizer.setScene(self.mainScene)
-        self.paint = PainterMask()
+        #self.paint = PainterMask()
         #Modo de seleccion
         self.selectionMode = self.configGeneral["savedParameters"]["selectionMode"]
         self.mainScene.setSelectionMode(self.selectionMode)
@@ -103,6 +104,13 @@ class MainGUIManager(QMainWindow):
         self.ui.horizontalSlider_size_pellets.setValue(self.widthFixedPellets)
         self.onFixedSizeChanged()
         self.mainScene.zoomEvent.connect(self.zoomAux)
+        #self.ui.checkBox_showContorno.setAutoExclusive(False)
+        #self.ui.checkBox_showMascara.setAutoExclusive(False)
+        self.ui.checkBox_showMascara.setChecked(False)
+        self.ui.checkBox_showContorno.setChecked(True)
+        #self.ui.checkBox_showContorno.setAutoExclusive(True)
+        #self.ui.checkBox_showMascara.setAutoExclusive(True)
+
         return
     
     
@@ -144,11 +152,99 @@ class MainGUIManager(QMainWindow):
 
 
         self.ui.checkBox_EnablePaint.clicked.connect(self.openPaint)
+        self.ui.pushButton_Dibujar.clicked.connect(self.enablePaint)
+        self.ui.pushButton_Borrar.clicked.connect(self.enableErase)
+        self.ui.checkBox_showMascara.clicked.connect(lambda _: self.changeSegmentationView("mask"))
+        self.ui.checkBox_showContorno.clicked.connect(lambda _: self.changeSegmentationView("contour"))
+        self.ui.horizontalSlider.valueChanged.connect(lambda _: self.mainScene.updateSizePixel(self.ui.horizontalSlider.value()))
+        self.ui.pushButton_ExportContornos.clicked.connect(self.exportMascaras)
         return
 
+    def exportMascaras(self):
+        mask = self.exportMask()
+        if os.path.exists(self.configGeneral["outputDir_Mask"]):
+            if os.path.isfile(self.maskPath):
+                reply = QMessageBox.question(None, 'WARNING', "Se sobreescribira la mascara existente, continuar?", buttons = QMessageBox.No|QMessageBox.Yes)
+                if reply == QMessageBox.Yes:
+                    cv2.imwrite(self.maskPath, mask)
+                    self.conversorMask.mask_to_polygon(mask,self.outputRoisPath)
+                else:
+                    pass
+            else:
+                cv2.imwrite(self.maskPath, mask)
+                _ = QMessageBox.question(None, '', "Mascara almacenada correctamente", buttons = QMessageBox.Ok) 
+            #self.setSelectedImage()
+        else:
+            try:
+                os.makedirs(self.configGeneral["outputDir_Mask"])
+                cv2.imwrite(self.maskPath, mask)
+                _ = QMessageBox.question(None, '', "Mascara almacenada correctamente", buttons = QMessageBox.Ok) 
+                
+            except:
+                pass
+        #self.mainScene.paintEnable = False
+        self.ui.checkBox_EnablePaint.setChecked(False)
+        self.openPaint()
+        self.setSelectedImage()
+
+    def changeSegmentationView(self, mode):
+        if mode == "mask":
+            self.ui.checkBox_showContorno.setChecked(False)
+            self.ui.checkBox_showMascara.setChecked(True)
+            self.mainScene.showContours = False
+            
+        else:
+            self.ui.checkBox_showContorno.setChecked(True)
+            self.ui.checkBox_showMascara.setChecked(False)
+            self.mainScene.showContours = True
+        self.mainScene.renderScene()
+
+    def enableErase(self):
+        if self.mainScene.isDelete == False:
+            self.mainScene.isDelete = True
+            self.ui.pushButton_Borrar.setStyleSheet("background-color: yellow")
+        else:
+            self.mainScene.isDelete = False
+            self.ui.pushButton_Borrar.setStyleSheet("background-color: ")
+        self.mainScene.isPaint = False
+        self.ui.pushButton_Dibujar.setStyleSheet("background-color: ")
+
+
+    def enablePaint(self):
+        if self.mainScene.isPaint == False:
+            self.mainScene.isPaint = True
+            self.ui.pushButton_Dibujar.setStyleSheet("background-color: yellow")
+        else:
+            self.mainScene.isPaint = False
+            self.ui.pushButton_Dibujar.setStyleSheet("")
+        self.mainScene.isDelete = False
+        self.ui.pushButton_Borrar.setStyleSheet("background-color: ")
+        
+
     def openPaint(self):
-        self.paint.initPaint()
-    
+        #self.paint.initPaint()
+        if self.ui.checkBox_EnablePaint.isChecked():
+            self.mainScene.paintEnable = True
+            self.mainScene.paintImage()
+            self.ui.pushButton_Dibujar.setEnabled(True)
+            self.ui.pushButton_Borrar.setEnabled(True)
+            self.ui.horizontalSlider.setEnabled(True)
+            self.ui.pushButton_ExportContornos.setEnabled(True)
+            self.mainScene.isPaint = False
+            self.mainScene.isDelete = False
+        else:
+            self.mainScene.paintEnable = False
+            self.mainScene.renderScene()
+            self.ui.pushButton_Dibujar.setEnabled(False)
+            self.ui.pushButton_Borrar.setEnabled(False)
+            self.ui.horizontalSlider.setEnabled(False)
+            self.ui.pushButton_ExportContornos.setEnabled(False)
+            self.ui.pushButton_Borrar.setStyleSheet("background-color: ")
+            self.ui.pushButton_Dibujar.setStyleSheet("background-color: ")
+            self.mainScene.isPaint = False
+            self.mainScene.isDelete = False
+
+
     def onModeChange(self):
         modes = ["detection","segmentation"]
         self.modeApp = modes[self.ui.tabWidget.currentIndex()]
@@ -216,6 +312,19 @@ class MainGUIManager(QMainWindow):
         else:
             self.outputImagePath = (self.appDir + self.configGeneral["outputDir_Segmentation"] + imageName).replace(extension, ".png")
             self.outputRoisPath = self.outputImagePath.replace(".png", ".txt")
+            self.maskPath = (self.appDir + self.configGeneral["outputDir_Mask"] + imageName).replace(extension, ".png")
+            try:
+                print(self.maskPath)
+                if os.path.isfile(self.maskPath):
+                    self.mainScene.mask = cv2.imread(self.maskPath)
+                else:
+                    self.mainScene.mask = np.zeros_like(image)
+
+                self.mainScene.isMask = True
+            except:
+                print("no existe mascara")
+                self.mainScene.isMask = False
+                self.mainScene.mask = np.zeros_like(image)
             roisTxt = self.mainController.importRois_YoloTXTSegmentation(image, self.outputRoisPath)
             rois = []
             if self.ui.checkBox_onlyOneClass.isChecked():
@@ -424,6 +533,12 @@ class MainGUIManager(QMainWindow):
     def resetZoom (self):
         self.zoom=1
         self.updateView()
+
+    def exportMask(self):
+       
+        mask = cv2.cvtColor(self.mainScene.mask, cv2.COLOR_BGR2GRAY)
+        ret, mask = cv2.threshold(mask, 50,255,0)
+        return mask
     
     def onCloseProgram(self):
         msg = "Crear punto de guardado?"

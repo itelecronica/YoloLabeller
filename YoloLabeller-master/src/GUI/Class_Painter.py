@@ -14,7 +14,7 @@ class Paint(QGraphicsView):
         #print (parent)
         QGraphicsView.__init__(self)
         #super(Paint, self).__init__ (parent)
-        self.img = cv2.imread("./YoloLabeller-master/src/a.jpg")
+        #self.img = cv2.imread("./YoloLabeller-master/src/a.jpg")
         self.mask = np.zeros_like(self.img)
         #pixmap = self.createPixmap()
         self.setSceneRect(QRectF(self.viewport().rect()))

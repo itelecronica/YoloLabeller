@@ -361,7 +361,7 @@
          <attribute name="title">
           <string>Segmentacion</string>
          </attribute>
-         <layout class="QVBoxLayout" name="verticalLayout_9" stretch="1,4,1,2,1,2,2,1,2,1,2,1">
+         <layout class="QVBoxLayout" name="verticalLayout_9" stretch="1,0,1,2,1,2,1,2,1">
           <item>
            <spacer name="verticalSpacer_9">
             <property name="orientation">
@@ -376,10 +376,54 @@
            </spacer>
           </item>
           <item>
-           <widget class="QCheckBox" name="checkBox_labelsSegmentation">
-            <property name="text">
-             <string>Show Labels</string>
+           <widget class="QGroupBox" name="groupBox_3">
+            <property name="title">
+             <string>Visualize</string>
             </property>
+            <layout class="QGridLayout" name="gridLayout_3">
+             <item row="0" column="1">
+              <widget class="QCheckBox" name="checkBox_showMascara">
+               <property name="text">
+                <string>Mascara</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="2">
+              <widget class="QCheckBox" name="checkBox_showContorno">
+               <property name="text">
+                <string>Contorno</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="1" colspan="2">
+              <widget class="QGroupBox" name="groupBox_4">
+               <property name="title">
+                <string/>
+               </property>
+               <layout class="QVBoxLayout" name="verticalLayout_11">
+                <item>
+                 <widget class="QCheckBox" name="checkBox_onlyOneClass">
+                  <property name="text">
+                   <string>Show 1 Class</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QComboBox" name="comboBox_Class">
+                  <property name="enabled">
+                   <bool>false</bool>
+                  </property>
+                  <item>
+                   <property name="text">
+                    <string/>
+                   </property>
+                  </item>
+                 </widget>
+                </item>
+               </layout>
+              </widget>
+             </item>
+            </layout>
            </widget>
           </item>
           <item>
@@ -421,38 +465,6 @@
            </spacer>
           </item>
           <item>
-           <widget class="QCheckBox" name="checkBox_onlyOneClass">
-            <property name="text">
-             <string>Show 1 Class</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QComboBox" name="comboBox_Class">
-            <property name="enabled">
-             <bool>false</bool>
-            </property>
-            <item>
-             <property name="text">
-              <string/>
-             </property>
-            </item>
-           </widget>
-          </item>
-          <item>
-           <spacer name="verticalSpacer_10">
-            <property name="orientation">
-             <enum>Qt::Vertical</enum>
-            </property>
-            <property name="sizeHint" stdset="0">
-             <size>
-              <width>20</width>
-              <height>40</height>
-             </size>
-            </property>
-           </spacer>
-          </item>
-          <item>
            <widget class="QGroupBox" name="groupBox_2">
             <property name="title">
              <string>Paint</string>
@@ -463,6 +475,82 @@
                <property name="text">
                 <string>Habilitar Pintado</string>
                </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QFrame" name="frame_2">
+               <property name="frameShape">
+                <enum>QFrame::StyledPanel</enum>
+               </property>
+               <property name="frameShadow">
+                <enum>QFrame::Raised</enum>
+               </property>
+               <layout class="QHBoxLayout" name="horizontalLayout_6">
+                <item>
+                 <widget class="QPushButton" name="pushButton_Dibujar">
+                  <property name="enabled">
+                   <bool>false</bool>
+                  </property>
+                  <property name="text">
+                   <string>Dibujar</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QPushButton" name="pushButton_Borrar">
+                  <property name="enabled">
+                   <bool>false</bool>
+                  </property>
+                  <property name="text">
+                   <string>Borrar</string>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </widget>
+             </item>
+             <item>
+              <widget class="QFrame" name="frame_3">
+               <property name="frameShape">
+                <enum>QFrame::StyledPanel</enum>
+               </property>
+               <property name="frameShadow">
+                <enum>QFrame::Raised</enum>
+               </property>
+               <layout class="QVBoxLayout" name="verticalLayout_12">
+                <item>
+                 <widget class="QLabel" name="label_3">
+                  <property name="text">
+                   <string>Size Pixel</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QSlider" name="horizontalSlider">
+                  <property name="enabled">
+                   <bool>false</bool>
+                  </property>
+                  <property name="minimum">
+                   <number>1</number>
+                  </property>
+                  <property name="maximum">
+                   <number>21</number>
+                  </property>
+                  <property name="singleStep">
+                   <number>2</number>
+                  </property>
+                  <property name="orientation">
+                   <enum>Qt::Horizontal</enum>
+                  </property>
+                  <property name="tickPosition">
+                   <enum>QSlider::TicksAbove</enum>
+                  </property>
+                  <property name="tickInterval">
+                   <number>2</number>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
               </widget>
              </item>
              <item>

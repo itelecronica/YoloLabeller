@@ -4,12 +4,18 @@ Created on 14 jun. 2021
 @author: Guille
 @comment: Clase de escena grafica que gestiona los eventos sobre las imagenes
 '''
+'''
+Modified on 14 dec. 2022
+
+@author: Pablo
+@comment: Etiquetado de mascaras y contornos para cualquier tipo de segmentacion + Zoom sobre la escena
+'''
 
 
 from PyQt5 import QtCore
 from PyQt5.QtWidgets import QGraphicsScene, QAction, QMenu
-from PyQt5.QtGui import QImage, QPixmap, QCursor, QPainter
-from PyQt5.QtCore import pyqtSignal
+from PyQt5.QtGui import QImage, QPixmap, QCursor, QPainter, QPen, QBrush
+from PyQt5.QtCore import pyqtSignal, Qt, QPointF
 import cv2
 from scipy.spatial import Delaunay
 from random import randint
@@ -43,6 +49,15 @@ class GraphicsScene(QGraphicsScene):
         self.oneLabel = False
         self.label = 0
         self._zoom = 0
+        self.mask = None
+        self.isPaint = False
+        self.isDelete = False
+        self.paintEnable = False
+        self.showMask = False
+        self.showContours = True
+        self.isMask = False
+        self.size_px = 1
+        
         #self.ventanaPellet = PhotoViewer(parent)
         
         
@@ -162,19 +177,8 @@ class GraphicsScene(QGraphicsScene):
                 initial_pos = QtCore.QPointF(event.scenePos())
                 initial_pos_x = int(initial_pos.x())
                 initial_pos_y = int(initial_pos.y())
-                if (self._mouse_button == QtCore.Qt.LeftButton):
-                    if not self.polygon_labelling:
-                        
-                        self.rois.append([0])
-                        self.index = len(self.rois) -1
-                        #print(self.index)
-                        #self.rois[self.index].append([[initial_pos_x, initial_pos_y]])
-                        self.rois[self.index].append(np.array([initial_pos_x, initial_pos_y], dtype = 'int32'))
-                        self.polygon_labelling = True
-                    else:
-                        #self.rois[self.index][1].append([initial_pos_x, initial_pos_y])
-                        np.append(self.rois[self.index][1],[initial_pos_x, initial_pos_y])
-                        self.renderScene()
+                if self.paintEnable:
+                    self.tools(QPointF(event.scenePos()))
         return
 
     def mouseMoveEvent(self, event):
@@ -194,15 +198,8 @@ class GraphicsScene(QGraphicsScene):
         else:
             self._mouse_button = event.buttons()
             if (self._mouse_button == QtCore.Qt.LeftButton):
-                if self.polygon_labelling:
-                    final_pos = QtCore.QPointF(event.scenePos())
-                    final_pos_x = int(final_pos.x())
-                    final_pos_y = int(final_pos.y())
-                    np.append(self.rois[self.index][1],[final_pos_x, final_pos_y])
-                    #print([final_pos_x, final_pos_y])
-                    #self.rois[self.index][1].append([final_pos_x, final_pos_y])
-                    self.renderScene()
-                    self.pollygon_labelling = False
+                if self.paintEnable:
+                    self.tools(QPointF(event.scenePos()))
 
 
             
@@ -316,24 +313,22 @@ class GraphicsScene(QGraphicsScene):
         else:
             #print ("hola")
             indice = 0
+            '''if self.mask == None:
+                self.mask = np.zeros_like(image)'''
+            if self.isMask == False:
+                self.mask = np.zeros_like(image)
             for roi in self.rois:
-                
-               # if indice == len(self.rois)-1:
-                    #print (roi)
                 colorPalette = [(255,0,0),(0,255,0),(0,0,255)]
                 nClase = roi[0]
-                #print (nClase)
                 color = colorPalette[nClase]
                 indice += 1
                 try:
-                    '''if roi[1].type() != "int32":
-                        print ("hola")
-                        roi[1] = np.array([[x, y] for x, y in zip(roi[1][0::2], roi[1][1::2])],dtype='int32')'''
-                    image = cv2.polylines(image,[roi[1]],True,color,2)
-                    #print(roi[1])
-                    #image = cv2.fillPoly(image, [roi[1]], color)
-                    x,y,wc,hc = cv2.boundingRect(roi[1])
-                    image = cv2.rectangle(image,(x,y),(x+wc,y+hc),color,1)
+                    if self.showContours:
+                        image = cv2.polylines(image,[roi[1]],True,color,2)
+                    else:
+                        image = cv2.fillPoly(image, [roi[1]], color)
+                        x,y,wc,hc = cv2.boundingRect(roi[1])
+                        image = cv2.rectangle(image,(x,y),(x+wc,y+hc),color,1)
                 except Exception as e:
                     print(e)
                     continue
@@ -343,6 +338,11 @@ class GraphicsScene(QGraphicsScene):
         
     def showImage(self, image):
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        if self.paintEnable:
+            if np.sum(self.mask == 0) == (self.mask.shape[0]*self.mask.shape[1]):
+                self.mask = np.zeros_like(image)
+            image = cv2.addWeighted(image, 0.7,self.mask,0.3,0.0)
+
         h, w, channels = image.shape
         bytesPerLine = channels * w
         frame = QImage(image.data, w, h, bytesPerLine, QImage.Format_RGB888)
@@ -350,4 +350,29 @@ class GraphicsScene(QGraphicsScene):
         self.addPixmap(QPixmap.fromImage(frame))
         self.update()
         return 
+
+
     
+    def tools(self, e):
+        size_px = self.size_px
+        if self.isPaint == True:
+
+            if size_px == 1: resize = 0
+            else: resize = int(size_px/2)
+            self.mask = cv2.rectangle(self.mask,(int(e.x())-resize,int(e.y())-resize),(int(e.x())+resize,int(e.y())+resize),(0,255,255),-1)
+            self.paintImage()
+
+        if self.isDelete == True:
+            
+            if size_px != 1: resize = int(size_px/2)
+            else: resize = 0    
+            self.mask = cv2.rectangle(self.mask,(int(e.x())-resize,int(e.y())-resize),(int(e.x())+resize,int(e.y())+resize),(0,0,0),-1)
+            self.paintImage()
+
+    def paintImage(self):
+        img = self.image.copy()
+        
+        self.showImage(img)
+
+    def updateSizePixel(self, value):
+        self.size_px = value
