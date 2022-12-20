@@ -155,7 +155,7 @@ class GraphicsScene(QGraphicsScene):
                     self.checkIfRoiSelected()
                     if self.selectedRoi is not None:
                         self.menu.popup(QCursor.pos())
-                #self.renderScene()
+                self.renderScene()
         else:
             if self.mouseEnabled:
                 self._mouse_button = event.buttons()
@@ -167,7 +167,7 @@ class GraphicsScene(QGraphicsScene):
                         
                         self.rois.append([0])
                         self.index = len(self.rois) -1
-                        print(self.index)
+                        #print(self.index)
                         #self.rois[self.index].append([[initial_pos_x, initial_pos_y]])
                         self.rois[self.index].append(np.array([initial_pos_x, initial_pos_y], dtype = 'int32'))
                         self.polygon_labelling = True
@@ -199,7 +199,7 @@ class GraphicsScene(QGraphicsScene):
                     final_pos_x = int(final_pos.x())
                     final_pos_y = int(final_pos.y())
                     np.append(self.rois[self.index][1],[final_pos_x, final_pos_y])
-                    print([final_pos_x, final_pos_y])
+                    #print([final_pos_x, final_pos_y])
                     #self.rois[self.index][1].append([final_pos_x, final_pos_y])
                     self.renderScene()
                     self.pollygon_labelling = False
@@ -318,8 +318,8 @@ class GraphicsScene(QGraphicsScene):
             indice = 0
             for roi in self.rois:
                 
-                if indice == len(self.rois)-1:
-                    print (roi)
+               # if indice == len(self.rois)-1:
+                    #print (roi)
                 colorPalette = [(255,0,0),(0,255,0),(0,0,255)]
                 nClase = roi[0]
                 #print (nClase)
@@ -329,9 +329,9 @@ class GraphicsScene(QGraphicsScene):
                     '''if roi[1].type() != "int32":
                         print ("hola")
                         roi[1] = np.array([[x, y] for x, y in zip(roi[1][0::2], roi[1][1::2])],dtype='int32')'''
-                    #image = cv2.polylines(image,[roi[1]],True,color,2)
+                    image = cv2.polylines(image,[roi[1]],True,color,2)
                     #print(roi[1])
-                    image = cv2.fillPoly(image, [roi[1]], color)
+                    #image = cv2.fillPoly(image, [roi[1]], color)
                     x,y,wc,hc = cv2.boundingRect(roi[1])
                     image = cv2.rectangle(image,(x,y),(x+wc,y+hc),color,1)
                 except Exception as e:

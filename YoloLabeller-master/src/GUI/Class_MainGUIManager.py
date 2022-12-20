@@ -14,7 +14,7 @@ import numpy as np
 
 from GUI.Class_Graphicscene import GraphicsScene
 from UTIL.Class_KBD import KBD
-7
+from GUI.Class_Painter import PainterMask
 
 
 class MainGUIManager(QMainWindow):
@@ -79,7 +79,7 @@ class MainGUIManager(QMainWindow):
         self.ui.graphicsView_visualizer.setFocusPolicy(Qt.NoFocus)
         self.mainScene = GraphicsScene(self.ui.graphicsView_visualizer, self.configGeneral)
         self.ui.graphicsView_visualizer.setScene(self.mainScene)
-        
+        self.paint = PainterMask()
         #Modo de seleccion
         self.selectionMode = self.configGeneral["savedParameters"]["selectionMode"]
         self.mainScene.setSelectionMode(self.selectionMode)
@@ -141,7 +141,13 @@ class MainGUIManager(QMainWindow):
         self.ui.tabWidget.currentChanged.connect(self.onModeChange)
         self.ui.checkBox_onlyOneClass.clicked.connect(self.OnshowOnly1Class)
         self.ui.comboBox_Class.currentIndexChanged.connect(self.getLabelOneClass)
+
+
+        self.ui.checkBox_EnablePaint.clicked.connect(self.openPaint)
         return
+
+    def openPaint(self):
+        self.paint.initPaint()
     
     def onModeChange(self):
         modes = ["detection","segmentation"]

@@ -9,23 +9,33 @@ class Canvas(QtWidgets.QLabel):
         super().__init__()
         #pixmap = QtGui.QPixmap(600, 300)
         
-        pixmap = self.createPixmap()
-        self.setPixmap(QtGui.QPixmap.fromImage(pixmap))
+        
+        '''img = cv2.imread("./YoloLabeller-master/src/a.jpg")
+        pixmap = self.createPixmap(img)
+        self.setPixmap(QtGui.QPixmap.fromImage(pixmap))'''
 
         self.last_x, self.last_y = None, None
         self.pen_color = QtGui.QColor('#000000')
 
-    def createPixmap(self):
-        img = cv2.imread("./YoloLabeller-master/src/a.jpg")
+    def createPixmap(self, img):
+        
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         height1, width1, _ = img.shape
-        height = 640
-        width = int(height*(width1/height1))
+        ### Redimensionar Alto-limite
+        #height = 900
+        #width = int(height*(width1/height1))
+        ### Redimensionar Ancho-limite
+        
+        width = 1300
+        height = int(width*(height1/width1))
         imgResize = cv2.resize(img, (width, height))
         
         _, _, channels = imgResize.shape
         bytesPerLine = channels * width
         frame = QImage(imgResize.data, width, height, bytesPerLine, QImage.Format_RGB888)
-        return frame
+
+        self.setPixmap(QtGui.QPixmap.fromImage(frame))
+        #return frame
 
     def set_pen_color(self, c):
         self.pen_color = QtGui.QColor(c)
@@ -68,7 +78,7 @@ class QPaletteButton(QtWidgets.QPushButton):
         self.setFixedSize(QtCore.QSize(24,24))
         self.color = color
         self.setStyleSheet("background-color: %s;" % color)
-class MainWindow(QtWidgets.QMainWindow):
+class MainWindowPaint(QtWidgets.QMainWindow):
 
     def __init__(self):
         super().__init__()
@@ -92,8 +102,13 @@ class MainWindow(QtWidgets.QMainWindow):
             b.pressed.connect(lambda c=c: self.canvas.set_pen_color(c))
             layout.addWidget(b)
 
+    def initPaint(self, imgPath):
+        img = cv2.imread(imgPath)
+        self.canvas.createPixmap(img)
+        self.show()
 
-app = QtWidgets.QApplication(sys.argv)
+
+'''app = QtWidgets.QApplication(sys.argv)
 window = MainWindow()
 window.show()
-app.exec_()
+app.exec_()'''
