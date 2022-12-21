@@ -25,7 +25,7 @@ class ConversorMasks:
             self.generateWhiteTxt(nameMask)
         for object in contours:
             x, y, width, height = cv2.boundingRect(object)
-            print(x, y, width, height)
+            #print(x, y, width, height)
             
             is_pellet = False
             
@@ -40,7 +40,7 @@ class ConversorMasks:
                 #polygon.append(coords)
             
             area = cv2.contourArea(object)
-            print("Area " + str(area))
+            #print("Area " + str(area))
 
             if area > 330 and area < 7000 :
                 nclase = 0
@@ -70,10 +70,10 @@ class ConversorMasks:
     def checkBlack(self, img, h, w, limit):
 
         number_of_black_pix = np.sum(img == 0) 
-        print(f"Numero de pixeles {number_of_black_pix}")
-        print(h,w)
+        '''print(f"Numero de pixeles {number_of_black_pix}")
+        print(h,w)'''
         percente_black_px = (float(number_of_black_pix/float(h*w)))*100.0
-        print (f"Porcentaje de px negros {percente_black_px}")
+        #print (f"Porcentaje de px negros {percente_black_px}")
         if percente_black_px < limit:
             return True
         else: return False

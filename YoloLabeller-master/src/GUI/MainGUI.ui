@@ -361,7 +361,14 @@
          <attribute name="title">
           <string>Segmentacion</string>
          </attribute>
-         <layout class="QVBoxLayout" name="verticalLayout_9" stretch="1,0,1,2,1,2,1,2,1">
+         <layout class="QVBoxLayout" name="verticalLayout_9" stretch="0,1,0,1,2,1,2,1,2,1">
+          <item>
+           <widget class="QPushButton" name="pushButton_ImportDataset">
+            <property name="text">
+             <string>Importar Dataset</string>
+            </property>
+           </widget>
+          </item>
           <item>
            <spacer name="verticalSpacer_9">
             <property name="orientation">

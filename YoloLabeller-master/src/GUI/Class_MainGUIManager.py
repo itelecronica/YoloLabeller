@@ -313,8 +313,10 @@ class MainGUIManager(QMainWindow):
             self.outputImagePath = (self.appDir + self.configGeneral["outputDir_Segmentation"] + imageName).replace(extension, ".png")
             self.outputRoisPath = self.outputImagePath.replace(".png", ".txt")
             self.maskPath = (self.appDir + self.configGeneral["outputDir_Mask"] + imageName).replace(extension, ".png")
+            self.ui.checkBox_EnablePaint.setChecked(False)
+            self.openPaint()
             try:
-                print(self.maskPath)
+                #print(self.maskPath)
                 if os.path.isfile(self.maskPath):
                     self.mainScene.mask = cv2.imread(self.maskPath)
                 else:

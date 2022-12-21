@@ -6,8 +6,8 @@
     },
     "inputDir":"../input/",
     "outputDir":"../output/",
-    "outputDir_Segmentation":"../labels/",
-    "outputDir_Mask":"../mask/",
+    "outputDir_Segmentation":"../Segmentation/labels/",
+    "outputDir_Mask":"../Segmentation/mask/",
     "fixed_dims":{
         "ROI":[33, 33],
         "randomSize_percent":0.10000000

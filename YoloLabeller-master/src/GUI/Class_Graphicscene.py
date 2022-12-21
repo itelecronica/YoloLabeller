@@ -13,7 +13,7 @@ Modified on 14 dec. 2022
 
 
 from PyQt5 import QtCore
-from PyQt5.QtWidgets import QGraphicsScene, QAction, QMenu
+from PyQt5.QtWidgets import QGraphicsScene, QAction, QMenu, QGraphicsView
 from PyQt5.QtGui import QImage, QPixmap, QCursor, QPainter, QPen, QBrush
 from PyQt5.QtCore import pyqtSignal, Qt, QPointF
 import cv2
@@ -57,6 +57,8 @@ class GraphicsScene(QGraphicsScene):
         self.showContours = True
         self.isMask = False
         self.size_px = 1
+        self.dragMode = False
+        self.graphics = parent
         
         #self.ventanaPellet = PhotoViewer(parent)
         
@@ -170,6 +172,13 @@ class GraphicsScene(QGraphicsScene):
                     self.checkIfRoiSelected()
                     if self.selectedRoi is not None:
                         self.menu.popup(QCursor.pos())
+                if (self._mouse_button == QtCore.Qt.MiddleButton):
+                    if self.dragMode == False:
+                        self.graphics.setDragMode(QGraphicsView.ScrollHandDrag)
+                        self.dragMode = True
+                    else:   
+                        self.graphics.setDragMode(QGraphicsView.NoDrag) 
+                        self.dragMode = False         
                 self.renderScene()
         else:
             if self.mouseEnabled:
@@ -177,8 +186,16 @@ class GraphicsScene(QGraphicsScene):
                 initial_pos = QtCore.QPointF(event.scenePos())
                 initial_pos_x = int(initial_pos.x())
                 initial_pos_y = int(initial_pos.y())
-                if self.paintEnable:
-                    self.tools(QPointF(event.scenePos()))
+                if (self._mouse_button == QtCore.Qt.LeftButton):
+                    if self.paintEnable:
+                        self.tools(QPointF(event.scenePos()))
+                if (self._mouse_button == QtCore.Qt.MiddleButton):
+                    if self.dragMode == False:
+                        self.graphics.setDragMode(QGraphicsView.ScrollHandDrag)
+                        self.dragMode = True
+                    else:   
+                        self.graphics.setDragMode(QGraphicsView.NoDrag) 
+                        self.dragMode = False            
         return
 
     def mouseMoveEvent(self, event):
@@ -200,6 +217,8 @@ class GraphicsScene(QGraphicsScene):
             if (self._mouse_button == QtCore.Qt.LeftButton):
                 if self.paintEnable:
                     self.tools(QPointF(event.scenePos()))
+           # elif (self._mouse_button == QtCore.Qt.MiddleButton):
+
 
 
             
@@ -226,21 +245,6 @@ class GraphicsScene(QGraphicsScene):
             return hull.find_simplex(p)>=0
         except:
             return 0
-
-
-    '''def fitInView(self, scale=True):
-        rect = QtCore.QRectF(self._photo.pixmap().rect())
-        if not rect.isNull():
-            self.setSceneRect(rect)
-            
-            unity = self.transform().mapRect(QtCore.QRectF(0, 0, 1, 1))
-            #self.scale(1 / unity.width(), 1 / unity.height())
-            viewrect = self.viewport().rect()
-            scenerect = self.transform().mapRect(rect)
-            factor = min(viewrect.width() / scenerect.width(),
-                            viewrect.height() / scenerect.height())
-            #self.scale(factor, factor)
-            self._zoom = 0'''
     
     def checkIfRoiSelected(self):
         i = 0
