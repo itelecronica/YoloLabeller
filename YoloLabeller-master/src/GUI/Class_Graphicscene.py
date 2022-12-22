@@ -187,7 +187,7 @@ class GraphicsScene(QGraphicsScene):
                 initial_pos_x = int(initial_pos.x())
                 initial_pos_y = int(initial_pos.y())
                 if (self._mouse_button == QtCore.Qt.LeftButton):
-                    if self.paintEnable:
+                    if self.paintEnable and self.dragMode == False:
                         self.tools(QPointF(event.scenePos()))
                 if (self._mouse_button == QtCore.Qt.MiddleButton):
                     if self.dragMode == False:
@@ -330,6 +330,7 @@ class GraphicsScene(QGraphicsScene):
                     if self.showContours:
                         image = cv2.polylines(image,[roi[1]],True,color,2)
                     else:
+                        print(roi[1])
                         image = cv2.fillPoly(image, [roi[1]], color)
                         x,y,wc,hc = cv2.boundingRect(roi[1])
                         image = cv2.rectangle(image,(x,y),(x+wc,y+hc),color,1)

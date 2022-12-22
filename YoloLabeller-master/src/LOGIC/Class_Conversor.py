@@ -124,6 +124,7 @@ class ConversorMasks:
             f.write(str(point_absolute) + " ")
         f.write("\n")
         f.close()
+        
         '''path_txt2 = output_path_labels2 + nameImg
         if os.path.isfile(path_txt2):
             try: 

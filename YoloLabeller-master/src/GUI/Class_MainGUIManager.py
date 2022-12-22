@@ -16,6 +16,7 @@ from GUI.Class_Graphicscene import GraphicsScene
 from UTIL.Class_KBD import KBD
 #from GUI.Class_Painter import PainterMask
 from LOGIC.Class_Conversor import ConversorMasks
+from GUI.Class_ConvertDataset import DatasetConverter
 
 class MainGUIManager(QMainWindow):
 
@@ -36,6 +37,7 @@ class MainGUIManager(QMainWindow):
         self.logoPath = self.appDir + "../cfg/source/logo.jpg"
         self.kbd = KBD()
         self.conversorMask = ConversorMasks()
+        self.conversorDataset = DatasetConverter()
         self.initGUIVariables()
         self.initGUISignals()
         self.loadGUITimer = QTimer()
@@ -110,9 +112,12 @@ class MainGUIManager(QMainWindow):
         self.ui.checkBox_showContorno.setChecked(True)
         #self.ui.checkBox_showContorno.setAutoExclusive(True)
         #self.ui.checkBox_showMascara.setAutoExclusive(True)
+        self.ui.pushButton_ImportDataset.clicked.connect(self.openConversor)
 
         return
     
+    def openConversor(self):
+        self.conversorDataset.exportaDatos()
     
     def initGUISignals(self):
         self.ui.pushButton_addClass.clicked.connect(self.addNewClass)
