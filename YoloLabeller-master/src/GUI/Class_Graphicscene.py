@@ -172,7 +172,7 @@ class GraphicsScene(QGraphicsScene):
                     self.checkIfRoiSelected()
                     if self.selectedRoi is not None:
                         self.menu.popup(QCursor.pos())
-                if (self._mouse_button == QtCore.Qt.MiddleButton):
+                if (self._mouse_button == QtCore.Qt.MiddleButton): # si se clica con la rueda del raton se cambia modo mano (desplazamiento) o flecha(funciones de dibujado)
                     if self.dragMode == False:
                         self.graphics.setDragMode(QGraphicsView.ScrollHandDrag)
                         self.dragMode = True
@@ -189,7 +189,7 @@ class GraphicsScene(QGraphicsScene):
                 if (self._mouse_button == QtCore.Qt.LeftButton):
                     if self.paintEnable and self.dragMode == False:
                         self.tools(QPointF(event.scenePos()))
-                if (self._mouse_button == QtCore.Qt.MiddleButton):
+                if (self._mouse_button == QtCore.Qt.MiddleButton): # si se clica con la rueda del raton se cambia modo mano (desplazamiento) o flecha(funciones de dibujado)
                     if self.dragMode == False:
                         self.graphics.setDragMode(QGraphicsView.ScrollHandDrag)
                         self.dragMode = True
@@ -213,6 +213,7 @@ class GraphicsScene(QGraphicsScene):
                         self.lastChange = roiIndex
                         self.renderScene()
         else:
+            # en el modo Segmentation cualquier movimiento de raton, solo afecta si el Paint esta activo, para poder pintar/borrar elementos
             self._mouse_button = event.buttons()
             if (self._mouse_button == QtCore.Qt.LeftButton):
                 if self.paintEnable:
@@ -229,6 +230,7 @@ class GraphicsScene(QGraphicsScene):
                     self.newRoi = None
                     if self.rois[len(self.rois) - 1] == []: self.rois.pop(len(self.rois) - 1)
 
+    # Recoger evento de raton para hacer zoom sobre la escena grafica. Este evento se envia a GUIManager para aplicarlo sobre la ui_graphicsView
     def wheelEvent(self, event):
         moose = event.delta()/120
         if moose > 0:
@@ -293,7 +295,7 @@ class GraphicsScene(QGraphicsScene):
             dy = 20
         return pxmin, pymin, pxmax, pymax, dy
         
-        
+    # Igual que en la GUIManager, se ha anhadido la gestion de la imagen en funcion del modo que se esta usando
     def renderScene(self):
         image = self.image.copy()
         h, w, _ = image.shape
@@ -320,20 +322,21 @@ class GraphicsScene(QGraphicsScene):
             '''if self.mask == None:
                 self.mask = np.zeros_like(image)'''
             if self.isMask == False:
-                self.mask = np.zeros_like(image)
+                self.mask = np.zeros_like(image)  # si esa imagen no tiene mascara definida en carpeta, se crea una vacia para poder definir elementos sobre ella
             for roi in self.rois:
                 colorPalette = [(255,0,0),(0,255,0),(0,0,255)]
                 nClase = roi[0]
                 color = colorPalette[nClase]
                 indice += 1
                 try:
+                    # en funcion del modo de visualizacion se dibuja sobre la imagen contornos o mascara
                     if self.showContours:
                         image = cv2.polylines(image,[roi[1]],True,color,2)
                     else:
                         print(roi[1])
                         image = cv2.fillPoly(image, [roi[1]], color)
                         x,y,wc,hc = cv2.boundingRect(roi[1])
-                        image = cv2.rectangle(image,(x,y),(x+wc,y+hc),color,1)
+                        image = cv2.rectangle(image,(x,y),(x+wc,y+hc),color,1) # Para el modo mascara tambien se dibujan las boundingBox correspondiente
                 except Exception as e:
                     print(e)
                     continue
@@ -343,6 +346,7 @@ class GraphicsScene(QGraphicsScene):
         
     def showImage(self, image):
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        # en caso de trabajar en modo "Paint" se superpone la imagen y la mascara, pudiendo ver en directo los nuevos elementos generados.
         if self.paintEnable:
             if np.sum(self.mask == 0) == (self.mask.shape[0]*self.mask.shape[1]):
                 self.mask = np.zeros_like(image)
@@ -357,7 +361,7 @@ class GraphicsScene(QGraphicsScene):
         return 
 
 
-    
+    # Funcion especifica para el modo Paint, recoge los puntos del evento de raton y dibuja sobre la mascara en funcion del tamanho de Pixel definido
     def tools(self, e):
         size_px = self.size_px
         if self.isPaint == True:

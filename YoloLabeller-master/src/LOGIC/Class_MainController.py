@@ -85,7 +85,8 @@ class MainController(QObject):
                 roisToImport.append([l, t, r, b, self.configGeneral["classes"][int(n)]])
         except: roisToImport = []
         return roisToImport
-    
+
+    # Importar los txt en formato YOLO de segmentation referentes a una imagen
     def importRois_YoloTXTSegmentation(self, image, roisPath):
         roisToImport = []
         try:
@@ -94,14 +95,11 @@ class MainController(QObject):
             f.close()
             dh, dw, _ = image.shape
             #print (dh,dw)
-            for roi in rois:
-                nClase = int(roi[0])
+            for roi in rois: # rois => nClase x1 y1 x2 y2 x3 y3 ..... xN yN 
+                nClase = int(roi[0]) # Recogemos el primer campo de cada linea, que hace referencia a la clase de dicho contorno
                 coords = roi[1:].split()
                 coordenadas = []
-                '''for i in range(0,len(coords),2):
-                    print(i)
-                    coordenadas.append(float(coords[i])*dw)
-                    coordenadas.append(float(coords[i+1])*dh)'''
+                # convertir las coordenadas absolutas (formatYOLO) a coordenadas de la imagen. Los pares son los puntos 'x', impares 'y'
                 for i in range(0,len(coords)):
                     if i%2==0:
                         coordenadas.append(float(coords[i])*dw)
@@ -109,11 +107,7 @@ class MainController(QObject):
                         coordenadas.append(float(coords[i])*dh)
                 
                 polygon = np.array([[x,y] for x, y in zip(coordenadas[0::2], coordenadas[1::2])], dtype ='int32') # convert list of coordinates to numpy massive 
-                #print (polygon)
-                '''polygon[:,0] = polygon[:,0]*dw
-                polygon[:,1] = polygon[:,1]*dh
-                polygon = polygon.astype(np.int32)'''
-                roisToImport.append([nClase,polygon])
+                roisToImport.append([nClase,polygon]) # lista de contornos, cada elemento es su clase y su contorno en np.array para poder dibujarlo
         except Exception as e: 
             print(e)
             print(traceback.format_exc())

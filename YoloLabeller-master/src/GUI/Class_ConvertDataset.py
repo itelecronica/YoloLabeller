@@ -1,3 +1,10 @@
+'''
+Created on 20 dec. 2022
+
+@author: Pablo
+@comment: Conversor de Datasets de segmentacion (mascaras o contornos) a otros formatos de segmentacion, y tambien, a deteccion de objetos
+'''
+
 import os, cv2
 import numpy as np
 
@@ -6,10 +13,10 @@ from PyQt5.QtWidgets import QDialog, QFileDialog, QMessageBox
 
 
 class Conversor:
-
     def __init__(self):
         return
 
+    # Conversion del txt Segmentation YOLO en formato U-Net, mascaras, adaptado al tamanho deseado de la mascara definido por interfaz
     def polygon_to_mask(self, path, width, height, file):
         pathMask =path + "/../masks/" + file.replace("txt", "png")
         coords = self.importTxtYolo(path + "/"+ file, height, width)
@@ -19,9 +26,9 @@ class Conversor:
                 mask = cv2.fillPoly(mask,[roi],(255,2555,255))
         cv2.imwrite(pathMask,mask)
 
-    def mask_to_polygon(self, pathToMask, nameMask, conversionsType):
 
-      
+     # funcion encargada de convertir la mascara en contornos y escribe el txt formato YOLO para segmentacion 
+    def mask_to_polygon(self, pathToMask, nameMask, conversionsType):
         mask = cv2.imread(pathToMask + "/" + nameMask,0)
         self.newFile = True
         h,w = mask.shape
@@ -74,6 +81,7 @@ class Conversor:
             self.newFile = False
         return 
 
+    # generacion de txt en formato Segmentation YOLO
     def generateTxtFileYOLO(self, points, nameImg, h, w, nClase):
         
         path_txt = nameImg.replace("png","txt")
@@ -105,6 +113,7 @@ class Conversor:
         f.write("\n")
         f.close()
 
+    # generacion de txt en formato Object Detection YOLO
     def generateTxtFileBounding(self,nameImg, nClase, x, y, width, height, h, w):
 
         path_txt2 = nameImg.replace("png", "txt")
@@ -123,11 +132,13 @@ class Conversor:
                 print("Error abriendo txt")
 
         f2.write(str(nClase) + " ")
+        # hallar el centro de la bounding box
         x = float(x) + float(width)/2.0
         y = float(y) + float(height)/2.0
+        # conversion de centro y dimensiones a coordenadas absolutas [0-1]
         x1, x2 = float(x)/float(w), float(width)/float(w)
         y1, y2 = float(y)/float(h), float(height)/float(h)
-        f2.write(str(x1) + " " + str(y1) + " " + str(x2)+ " " + str(y2) + "\n")
+        f2.write(str(x1) + " " + str(y1) + " " + str(x2)+ " " + str(y2) + "\n") # escribir formato: nClase centroX centroY ancho alto
         f2.close()
 
     def generateWhiteTxt(self, nameImg):
@@ -146,6 +157,7 @@ class Conversor:
         f.write(" ")
         f.close()
 
+    # leer el txt Segmentation YOLO, y convertir los puntos absolutos a relativos del tamanho de mascara definido en interfaz
     def importTxtYolo(self, path, h, w):
         roisToImport = []
         f = open(path,'r')
@@ -190,6 +202,7 @@ class DatasetConverter(QDialog, Ui_DatasetConverter):
         self.pushButton_Generar.clicked.connect(self.defineConversion)
         self.groupBox_4.setVisible(False)
 
+    # chequea que se haya definido minimo un formato de salida para la conversion del dataset 
     def defineConversion(self):
         formatConversion = []
         for checkbox in self.checkBoxOutputs:
@@ -202,6 +215,7 @@ class DatasetConverter(QDialog, Ui_DatasetConverter):
             print(formatConversion)
         self.startConversion(formatConversion)
 
+    # en funcion de los formatos de entrada y salida definidos, realiza la conversion del dataset
     def startConversion(self,formatConversion):
         self.createOutputFolders(formatConversion)
         i = 1
@@ -215,13 +229,13 @@ class DatasetConverter(QDialog, Ui_DatasetConverter):
             i += 1
             self.updateProgressBar(i)
 
-
+    # recoger de la interfaz formato de entrada, y activar navegador de archivos para definir ruta del dataset
     def defineInputExtension(self, n):
         if self.checkBoxInputs[n].isChecked():
-            for checkBox in self.checkBoxInputs:
+            for checkBox in self.checkBoxInputs: # una vez definido formato de entrada, anula los otros formatos presentes
                 if self.checkBoxInputs.index(checkBox) != n:
                     checkBox.setEnabled(False)
-            for checkBox in self.checkBoxOutputs:
+            for checkBox in self.checkBoxOutputs: # anula el formato de salida que es igual al formato de entrada
                 if self.checkBoxOutputs.index(checkBox) == n:
                     checkBox.setEnabled(False)
             self.formatToConvert = self.formatsEnables[n]
@@ -235,20 +249,21 @@ class DatasetConverter(QDialog, Ui_DatasetConverter):
             self.formatToConvert = None
         print(self.formatToConvert)
 
+    # comprobar el directorio de entrada y contabilizar los archivos compatibles con el formato de entrada definidos
     def checkFolder(self):
         self.filesToConvert = []
         if self.pathToConvert != None:
             for file in os.listdir(self.pathToConvert):
                 if file.split(".")[1] == self.formatToConvert:
                     self.filesToConvert.append(file)
-        self.label_filesCount.setText(f"Detectados {len(self.filesToConvert)} archivos")
+        self.label_filesCount.setText(f"Detectados {len(self.filesToConvert)} archivos") # mostrar numero de archivos disponibles en directorio
 
-
+    # ejecutar navegador de archivos para definir ruta del dataset
     def openFolderDialog(self):
         dialogoSeleccionFolder = QFileDialog()
         dialogoSeleccionFolder.setOption(QFileDialog.DontUseNativeDialog,True)
         dialogoSeleccionFolder.setOption(QFileDialog.ReadOnly, True)
-        dialogoSeleccionFolder.setFileMode(QFileDialog.DirectoryOnly)
+        dialogoSeleccionFolder.setFileMode(QFileDialog.DirectoryOnly) # Set para configurar solo directorios como seleccionables
         #dialogoSeleccionFolder.setNameFilter("Images (*.jpeg)");
         #dialogoSeleccionFolder.setDirectory(self.imagesFolder)
         self.pathToConvert = dialogoSeleccionFolder.getExistingDirectory(self, "Select Directory")

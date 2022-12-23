@@ -165,6 +165,7 @@ class MainGUIManager(QMainWindow):
         self.ui.pushButton_ExportContornos.clicked.connect(self.exportMascaras)
         return
 
+    # Cuando se modifica o define una mascara, al pulsar sobre el boton "Exportar", aqui se almacena y se transforma en listado de contornos YOLO
     def exportMascaras(self):
         mask = self.exportMask()
         if os.path.exists(self.configGeneral["outputDir_Mask"]):
@@ -192,6 +193,7 @@ class MainGUIManager(QMainWindow):
         self.openPaint()
         self.setSelectedImage()
 
+    # Cambiar la manera de visualizacion de los dataset de segmentacion (Mascara superpuesta/Contornos de la mascara)
     def changeSegmentationView(self, mode):
         if mode == "mask":
             self.ui.checkBox_showContorno.setChecked(False)
@@ -204,6 +206,7 @@ class MainGUIManager(QMainWindow):
             self.mainScene.showContours = True
         self.mainScene.renderScene()
 
+    # Habilitar el borrado de zonas definidas en la mascara
     def enableErase(self):
         if self.mainScene.isDelete == False:
             self.mainScene.isDelete = True
@@ -214,7 +217,7 @@ class MainGUIManager(QMainWindow):
         self.mainScene.isPaint = False
         self.ui.pushButton_Dibujar.setStyleSheet("background-color: ")
 
-
+    # Habilitar la funcion de pintado sobre la mascara
     def enablePaint(self):
         if self.mainScene.isPaint == False:
             self.mainScene.isPaint = True
@@ -225,7 +228,7 @@ class MainGUIManager(QMainWindow):
         self.mainScene.isDelete = False
         self.ui.pushButton_Borrar.setStyleSheet("background-color: ")
         
-
+    # Habilitar las caracteristicas para definir mascaras en segmentacion
     def openPaint(self):
         #self.paint.initPaint()
         if self.ui.checkBox_EnablePaint.isChecked():
@@ -249,7 +252,7 @@ class MainGUIManager(QMainWindow):
             self.mainScene.isPaint = False
             self.mainScene.isDelete = False
 
-
+    # Funcion que detecta el cambio de pestanha en el tabulador y actualiza la imagen en funcion de si se esta en Deteccion o Segmentacion
     def onModeChange(self):
         modes = ["detection","segmentation"]
         self.modeApp = modes[self.ui.tabWidget.currentIndex()]
@@ -310,6 +313,7 @@ class MainGUIManager(QMainWindow):
         imageName = imageName[len(imageName) - 1]
         extension = imageName.split(".")
         extension = "." + extension[len(extension) - 1]
+        # se ha anhadido las dos opciones de YOLO, haciendo diferencia para recoger labels y mascaras
         if self.modeApp == "detection":
             self.outputImagePath = (self.appDir + self.configGeneral["outputDir"] + imageName).replace(extension, ".png")
             self.outputRoisPath = self.outputImagePath.replace(".png", ".txt")
@@ -332,19 +336,21 @@ class MainGUIManager(QMainWindow):
                 print("no existe mascara")
                 self.mainScene.isMask = False
                 self.mainScene.mask = np.zeros_like(image)
-            roisTxt = self.mainController.importRois_YoloTXTSegmentation(image, self.outputRoisPath)
+            roisTxt = self.mainController.importRois_YoloTXTSegmentation(image, self.outputRoisPath) # Importar las labels de contornos de YOLO
             rois = []
+            # en caso de que se seleccione mostrar una unica clase, aqui se filtran unicamente los contornos de la clase a mostrar
             if self.ui.checkBox_onlyOneClass.isChecked():
                 for roi in roisTxt:
                     if roi[0]== self.labelOneClass:
                         rois.append(roi)
             else: rois = roisTxt
-            self.showCountSegmentation(rois)
+            self.showCountSegmentation(rois) # mostrar por interfaz los contadores de clases en cada imagen
         self.ui.label_selectedImage.setText(f"Image: {self.indexOfList + 1} of {len(self.imageList)}:    {imageName}")
         self.resetZoom()
         self.mainScene.setSelectedImage(image, rois, self.modeApp)
         return
 
+    # en segmentacion, mostrar una unica clase en imagen, ocultando el resto de clases presentes 
     def OnshowOnly1Class(self):
         if self.ui.checkBox_onlyOneClass.isChecked():
             self.ui.comboBox_Class.setEnabled(True)
@@ -354,9 +360,10 @@ class MainGUIManager(QMainWindow):
             self.setSelectedImage()
         return
 
+    # Definir la clase que se quiere mostrar
     def getLabelOneClass(self): 
         if self.ui.checkBox_onlyOneClass.isChecked():
-            clase = str(self.ui.comboBox_Class.currentText())
+            clase = str(self.ui.comboBox_Class.currentText()) # Recoger de la interfaz la clase seleccionada
             if clase in self.configGeneral["classes"]:
                 self.labelOneClass = self.configGeneral["classes"].index(clase)
                 self.setSelectedImage()
@@ -364,7 +371,8 @@ class MainGUIManager(QMainWindow):
                 _ = QMessageBox.question(None, 'ERROR', "Es necesario seleccionar una clase a mostrar", buttons = QMessageBox.Ok)
         else: pass
         return
-        
+    
+    # mostrar los contadores de elementos por clase
     def showCountSegmentation(self, rois):
 
         count_classes = [0]*len(self.configGeneral["classes"])
@@ -541,6 +549,7 @@ class MainGUIManager(QMainWindow):
         self.zoom=1
         self.updateView()
 
+    # Convertir la mascara definida a binaria
     def exportMask(self):
        
         mask = cv2.cvtColor(self.mainScene.mask, cv2.COLOR_BGR2GRAY)
