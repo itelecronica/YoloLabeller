@@ -6,9 +6,11 @@ Created on 20 dec. 2022
 '''
 
 import os, cv2
+from xmlrpc.server import resolve_dotted_attribute
 import numpy as np
 
 from GUI.DatasetConversorGUI import Ui_DatasetConverter
+from GUI.MaksConfiguratorGUI import Ui_MasksConfigurator
 from PyQt5.QtWidgets import QDialog, QFileDialog, QMessageBox
 
 
@@ -176,7 +178,41 @@ class Conversor:
                 roisToImport.append(polygon)
         return roisToImport
 
+class ConfiguratorMasks(QDialog, Ui_MasksConfigurator):
 
+    def __init__(self):
+        super(ConfiguratorMasks,self).__init__()
+        self.setupUi(self)
+        self.pushButton_ExportParameters.clicked.connect(self.completeDictionary)
+        self.dictParameters = {"Dimensions":{"Width":"-----","Height":"--------"},
+                                "Colours":{"type":"----","colours":"[-----]"},
+                                "Area":{"0":"[----]"}}
+        self.success = False
+        return 
+
+    def completeDictionary(self):
+        if self.lineEdit_maskWidth.text() != "" or self.lineEdit_maskHeight.text() != "":
+            self.dictParameters["Dimensions"]["Width"] = int(self.lineEdit_maskWidth.text())
+            self.dictParameters["Dimensions"]["Height"] = int(self.lineEdit_maskHeight.text()) 
+            self.success = True
+            self.accept()
+        else:
+            _ = QMessageBox.question(None, 'ERROR', "Es necesario definir dimensiones de salida de la mascara.", buttons = QMessageBox.Ok)
+
+    def exportParameters(self):
+        self.show()
+        
+        if self.exec_() == QDialog.Accepted:
+            self.completeDictionary()
+            if self.success:
+                self.success = False
+                return self.dictParameters
+            else:
+                return None
+        else:
+            return None
+            
+        
 
 
 class DatasetConverter(QDialog, Ui_DatasetConverter):
@@ -186,6 +222,7 @@ class DatasetConverter(QDialog, Ui_DatasetConverter):
 
         self.setupUi(self)
         self.conversor = Conversor()
+        self.configuratorMasks = ConfiguratorMasks()
         self.pathToConvert = None
         self.formatsEnables = ["png", "txt"]
         self.formatToConvert = None
@@ -200,7 +237,8 @@ class DatasetConverter(QDialog, Ui_DatasetConverter):
         self.checkBox_outputUnet.clicked.connect(self.showDimensionsMask)
 
         self.pushButton_Generar.clicked.connect(self.defineConversion)
-        self.groupBox_4.setVisible(False)
+        self.pushButton_ConfigMask.clicked.connect(self.defineParametersMask)
+        self.pushButton_ConfigMask.setVisible(False)
 
     # chequea que se haya definido minimo un formato de salida para la conversion del dataset 
     def defineConversion(self):
@@ -223,9 +261,11 @@ class DatasetConverter(QDialog, Ui_DatasetConverter):
             if self.formatToConvert == "png":
                 self.conversor.mask_to_polygon(self.pathToConvert,file,formatConversion)
             else:
-                height = int(self.lineEdit_Height.text())
-                width = int(self.lineEdit_Width.text())
-                self.conversor.polygon_to_mask(self.pathToConvert,height,width, file)
+                '''height = int(self.lineEdit_Height.text())
+                width = int(self.lineEdit_Width.text())'''
+                height = int(self.parametersMaskDict["Dimensions"]["Height"])
+                width = int(self.parametersMaskDict["Dimensions"]["Width"])
+                self.conversor.polygon_to_mask(self.pathToConvert,width,height, file)
             i += 1
             self.updateProgressBar(i)
 
@@ -296,9 +336,18 @@ class DatasetConverter(QDialog, Ui_DatasetConverter):
 
     def showDimensionsMask(self):
         if self.checkBox_outputUnet.isChecked():
-            self.groupBox_4.setVisible(True)
-        else: self.groupBox_4.setVisible(False)
+            self.pushButton_ConfigMask.setVisible(True)
+            self.pushButton_ConfigMask.setEnabled(True)
 
+        else: 
+            self.pushButton_ConfigMask.setVisible(False)
+            self.pushButton_ConfigMask.setEnabled(False)
+        
+    def defineParametersMask(self):
+        parametersMask = self.configuratorMasks.exportParameters()
+        if parametersMask is not None:
+            self.parametersMaskDict = parametersMask
+        return
 
     def exportaDatos(self):
         self.show()

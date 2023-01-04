@@ -105,7 +105,7 @@ class MainGUIManager(QMainWindow):
         self.ui.horizontalSlider_size_pellets.setSingleStep(5)
         self.ui.horizontalSlider_size_pellets.setValue(self.widthFixedPellets)
         self.onFixedSizeChanged()
-        self.mainScene.zoomEvent.connect(self.zoomAux)
+        #self.mainScene.zoomEvent.connect(self.zoomAux)
         #self.ui.checkBox_showContorno.setAutoExclusive(False)
         #self.ui.checkBox_showMascara.setAutoExclusive(False)
         self.ui.checkBox_showMascara.setChecked(False)
@@ -179,6 +179,7 @@ class MainGUIManager(QMainWindow):
             else:
                 cv2.imwrite(self.maskPath, mask)
                 _ = QMessageBox.question(None, '', "Mascara almacenada correctamente", buttons = QMessageBox.Ok) 
+                self.conversorMask.mask_to_polygon(mask,self.outputRoisPath)
             #self.setSelectedImage()
         else:
             try:
@@ -525,7 +526,7 @@ class MainGUIManager(QMainWindow):
         event.ignore()
         return
 
-    def zoomAux(self, type):
+    '''def zoomAux(self, type):
         if type == -1:
             self.zoomOut()
         else:
@@ -543,11 +544,11 @@ class MainGUIManager(QMainWindow):
 
         self.ui.graphicsView_visualizer.setTransform(QTransform().scale(self.zoom, self.zoom))
         self.ui.graphicsView_visualizer.setScene(self.mainScene)
-        self.mainScene.update()        
+        self.mainScene.update()'''        
 
     def resetZoom (self):
-        self.zoom=1
-        self.updateView()
+        self.mainScene._zoom=1
+        self.mainScene.updateView()
 
     # Convertir la mascara definida a binaria
     def exportMask(self):

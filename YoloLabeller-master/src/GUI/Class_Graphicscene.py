@@ -14,7 +14,7 @@ Modified on 14 dec. 2022
 
 from PyQt5 import QtCore
 from PyQt5.QtWidgets import QGraphicsScene, QAction, QMenu, QGraphicsView
-from PyQt5.QtGui import QImage, QPixmap, QCursor, QPainter, QPen, QBrush
+from PyQt5.QtGui import QImage, QPixmap, QCursor, QPainter, QPen, QBrush, QTransform
 from PyQt5.QtCore import pyqtSignal, Qt, QPointF
 import cv2
 from scipy.spatial import Delaunay
@@ -48,7 +48,7 @@ class GraphicsScene(QGraphicsScene):
         self.showLabels = self.configGeneral["showLabels"]
         self.oneLabel = False
         self.label = 0
-        self._zoom = 0
+        self._zoom = 1
         self.mask = None
         self.isPaint = False
         self.isDelete = False
@@ -235,10 +235,19 @@ class GraphicsScene(QGraphicsScene):
         moose = event.delta()/120
         if moose > 0:
             #mainConfigurator.zoomIn()
-            self.zoomEvent.emit(1)
+            #self.zoomEvent.emit(1)
+            self._zoom *= 1.05
         elif moose < 0:
             #mainConfigurator.zoomOut()
-            self.zoomEvent.emit(-1)
+            #self.zoomEvent.emit(-1)
+            self._zoom /= 1.05
+        self.updateView()
+
+    def updateView(self):
+
+        self.graphics.setTransform(QTransform().scale(self._zoom, self._zoom))
+        self.graphics.setScene(self)
+        self.update()
         
     def in_hull(self, p, hull):
         try:
@@ -340,7 +349,6 @@ class GraphicsScene(QGraphicsScene):
                 except Exception as e:
                     print(e)
                     continue
-
         self.showImage(image)
         
         
